@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Environment
+.env
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+
+# Airflow
+airflow/logs/
+airflow/plugins/
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db

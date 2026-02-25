@@ -1,0 +1,127 @@
+version: "3.8"
+
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.8.1
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
+    AIRFLOW__CORE__FERNET_KEY: ""
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__WEBSERVER__SECRET_KEY: "tapi_secret"
+    # Instala dependencias Python al iniciar los containers de Airflow
+    _PIP_ADDITIONAL_REQUIREMENTS: "psycopg2-binary>=2.9 dbt-postgres>=1.7,<2.0"
+    # Conexiones a las BBDDs — dentro de Docker se usan los nombres de servicio
+    OLTP_HOST: oltp-db
+    OLTP_PORT: "5432"
+    OLTP_DB: oltp_db
+    OLTP_USER: oltp_user
+    OLTP_PASSWORD: oltp_pass
+    DW_HOST: dw-db
+    DW_PORT: "5432"
+    DW_DB: dw_db
+    DW_USER: dw_user
+    DW_PASSWORD: dw_pass
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./dbt:/opt/airflow/dbt
+    - ./scripts:/opt/airflow/scripts
+    - airflow_logs:/opt/airflow/logs
+  depends_on:
+    airflow-db:
+      condition: service_healthy
+
+services:
+
+  # ── PostgreSQL OLTP (source) ────────────────────────────────────────────────
+  oltp-db:
+    image: postgres:15
+    container_name: tapi_oltp
+    environment:
+      POSTGRES_DB: oltp_db
+      POSTGRES_USER: oltp_user
+      POSTGRES_PASSWORD: oltp_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - oltp_data:/var/lib/postgresql/data
+      - ./sql/oltp_init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oltp_user -d oltp_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── PostgreSQL DW (destination) ─────────────────────────────────────────────
+  dw-db:
+    image: postgres:15
+    container_name: tapi_dw
+    environment:
+      POSTGRES_DB: dw_db
+      POSTGRES_USER: dw_user
+      POSTGRES_PASSWORD: dw_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - dw_data:/var/lib/postgresql/data
+      - ./sql/dw_init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dw_user -d dw_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Airflow metadata DB ─────────────────────────────────────────────────────
+  airflow-db:
+    image: postgres:15
+    container_name: tapi_airflow_db
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+    volumes:
+      - airflow_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Airflow init ────────────────────────────────────────────────────────────
+  airflow-init:
+    <<: *airflow-common
+    container_name: tapi_airflow_init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username admin \
+          --password admin \
+          --firstname Tapi \
+          --lastname Admin \
+          --role Admin \
+          --email admin@tapi.com
+    restart: "no"
+
+  # ── Airflow webserver ───────────────────────────────────────────────────────
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: tapi_airflow_webserver
+    command: webserver
+    ports:
+      - "8081:8080"
+    restart: always
+
+  # ── Airflow scheduler ───────────────────────────────────────────────────────
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: tapi_airflow_scheduler
+    command: scheduler
+    restart: always
+
+volumes:
+  oltp_data:
+  dw_data:
+  airflow_db_data:
+  airflow_logs:

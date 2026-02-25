@@ -1,0 +1,2 @@
+psycopg2-binary>=2.9
+dbt-postgres>=1.7,<2.0

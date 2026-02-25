@@ -1,0 +1,60 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: "Tablas crudas cargadas por los scripts Python desde el OLTP"
+
+    tables:
+      - name: stg_payments
+        description: "Transacciones de tipo recarga extraídas incrementalmente del OLTP"
+        columns:
+          - name: transaction_id
+            description: "PK de la transacción"
+            tests:
+              - unique
+              - not_null
+          - name: created_at
+            tests: [not_null]
+          - name: status
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ["confirmed", "pending", "rejected"]
+          - name: amount
+            tests: [not_null]
+          - name: type
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ["recarga"]
+
+      - name: stg_providers_commission
+        description: "Comisiones por proveedor/biller (full refresh desde OLTP)"
+        columns:
+          - name: external_provider_id
+            tests: [not_null]
+          - name: company_code
+            tests: [not_null]
+          - name: tapi_commission
+            tests: [not_null]
+          - name: commission_type
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ["amount"]
+
+      - name: stg_clients_revenue_share
+        description: "Revenue share por cliente fintech (full refresh desde OLTP)"
+        columns:
+          - name: client_id
+            tests:
+              - unique
+              - not_null
+          - name: revenue_share
+            tests: [not_null]
+          - name: commission_type
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ["revenue_share"]

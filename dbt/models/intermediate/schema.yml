@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: int_payments_enriched
+    description: >
+      Transacciones enriquecidas con la comisión del proveedor y el revenue share
+      del cliente vigentes en el momento exacto de cada transacción (join SCD2).
+      Incluye los tres KPIs de revenue calculados para transacciones confirmed.
+    columns:
+      - name: transaction_id
+        description: "PK de la transacción"
+        tests:
+          - unique
+          - not_null
+      - name: tapi_gross_revenue
+        description: "amount × tapi_commission (0 si no es confirmed)"
+        tests: [not_null]
+      - name: client_payout
+        description: "tapi_gross_revenue × revenue_share (0 si no es confirmed)"
+        tests: [not_null]
+      - name: tapi_net_revenue
+        description: "tapi_gross_revenue − client_payout (0 si no es confirmed)"
+        tests: [not_null]

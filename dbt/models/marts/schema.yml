@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: fact_payments
+    description: >
+      Tabla de hechos con todas las transacciones enriquecidas.
+      Granularidad: una fila por transacción.
+      Las métricas de revenue son 0 para status != confirmed.
+    columns:
+      - name: transaction_id
+        description: "PK de la transacción"
+        tests:
+          - unique
+          - not_null
+      - name: status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["confirmed", "pending", "rejected"]
+      - name: amount
+        tests: [not_null]
+      - name: tapi_gross_revenue
+        tests: [not_null]
+      - name: client_payout
+        tests: [not_null]
+      - name: tapi_net_revenue
+        tests: [not_null]
+
+  - name: rpt_daily_revenue
+    description: >
+      Reporte diario agregado por (fecha, cliente, proveedor).
+      Fuente principal para dashboards. Incluye KPIs de volumen,
+      montos y revenue para transacciones confirmed.
+    columns:
+      - name: report_date
+        tests: [not_null]
+      - name: client_id
+        tests: [not_null]
+      - name: provider_id
+        tests: [not_null]
+      - name: confirmation_rate
+        description: "Valor entre 0 y 1. NULL si no hay transacciones."
+      - name: tapi_net_revenue
+        description: "Ganancia neta de Tapi del día (solo confirmed)"
