@@ -73,7 +73,7 @@ Pipeline ETL completo desde tablas productivas OLTP hasta visualización de KPIs
 pip install -r requirements.txt
 ```
 
-### 2. Correr el pipeline
+### 2. Levantar la infraestructura
 
 ```bash
 python run.py
@@ -87,17 +87,9 @@ El script hace todo en orden:
 4. `extract.py` — extrae pagos al DW (incremental)
 5. `dbt deps` + `dbt snapshot` + `dbt run` — construye todos los modelos
 
-Al finalizar, los datos están disponibles en `marts.fact_payments` y `marts.rpt_daily_revenue`.
-
-**Flag opcional:**
-
-```bash
-python run.py --no-docker  # omite docker-compose up (si los contenedores ya corren)
-```
+> En este punto el OLTP está vacío, así que el pipeline corre sin datos. El paso siguiente los carga.
 
 ### 3. Poblar el OLTP con datos de prueba
-
-El OLTP arranca vacío. Para generar datos de prueba:
 
 ```bash
 python scripts/seed_data.py
@@ -108,11 +100,15 @@ Genera:
 - 4 clientes fintech con revenue share
 - 100 transacciones históricas (últimos 90 días)
 
-Luego volvé a correr el pipeline para procesar los datos:
+### 4. Correr el pipeline con los datos cargados
 
 ```bash
 python run.py --no-docker
 ```
+
+`--no-docker` omite `docker-compose up` dado que los contenedores ya están corriendo.
+
+Al finalizar, los datos están disponibles en `marts.fact_payments` y `marts.rpt_daily_revenue`.
 
 ### Infraestructura levantada
 
@@ -126,12 +122,12 @@ Airflow disponible en `http://localhost:8081` (user: `admin`, pass: `admin`).
 
 ### Correr pasos individualmente
 
-Si preferís correr paso a paso (o usar la CLI de dbt directamente):
+Si preferís correr paso a paso (los contenedores deben estar levantados):
 
 ```bash
-python scripts/seed_data.py
-python scripts/load.py
-python scripts/extract.py
+# EL Layer
+python scripts/load.py        # full refresh de dimensiones
+python scripts/extract.py     # extracción incremental de pagos
 
 # dbt via Python API (funciona sin dbt en el PATH — recomendado en Windows)
 python -m dbt deps     --project-dir dbt --profiles-dir dbt
@@ -163,8 +159,7 @@ El challenge requiere demostrar que el pipeline captura cambios en tiempo real.
 python scripts/seed_data.py --add 10
 
 # Re-correr el pipeline — extract.py detecta las filas nuevas por updated_at
-python scripts/extract.py
-cd dbt && dbt run --profiles-dir . --project-dir .
+python run.py --no-docker
 ```
 
 ### Caso 2: cambio de status (pending → confirmed)
@@ -175,8 +170,7 @@ cd dbt && dbt run --profiles-dir . --project-dir .
 python scripts/seed_data.py --update 5
 
 # Re-correr el pipeline — extract.py detecta los updated_at modificados
-python scripts/extract.py
-cd dbt && dbt run --profiles-dir . --project-dir .
+python run.py --no-docker
 ```
 
 En ambos casos, `rpt_daily_revenue` refleja los nuevos valores sin necesidad de recargar el histórico completo.
@@ -214,7 +208,7 @@ El modelo `int_payments_enriched` aplica el valor vigente **en el momento de cad
 tapi_challenge/
 ├── docker-compose.yml
 ├── requirements.txt
-├── .env
+├── run.py                      # Orquestador único
 ├── sql/
 │   ├── oltp_init.sql           # Schema OLTP con updated_at y trigger
 │   └── dw_init.sql             # Schema DW con capas raw/staging/marts
@@ -229,10 +223,10 @@ tapi_challenge/
 │   ├── macros/
 │   │   └── generate_schema_name.sql
 │   ├── models/
-│   │   ├── staging/            # sources.yml + 3 vistas
-│   │   ├── intermediate/       # int_payments_enriched
-│   │   └── marts/              # fact_payments + rpt_daily_revenue
-│   └── snapshots/              # SCD Type 2
+│   │   ├── staging/            # sources.yml + stg_payments/providers/clients
+│   │   ├── intermediate/       # int_payments_enriched (join SCD2 + KPIs)
+│   │   └── marts/              # dim_providers, dim_clients, fact_payments, rpt_daily_revenue
+│   └── snapshots/              # SCD Type 2 — providers y clients
 └── airflow/
     └── dags/
         └── tapi_etl_dag.py
