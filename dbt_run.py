@@ -12,8 +12,9 @@ Uso:
 """
 
 import sys
+import os
 from dbt.cli.main import dbtRunner
 
 args = sys.argv[1:] + ["--project-dir", "dbt", "--profiles-dir", "dbt"]
 result = dbtRunner().invoke(args)
-sys.exit(0 if result.success else 1)
+os._exit(0 if result.success else 1)
