@@ -126,14 +126,18 @@ Si preferís correr paso a paso (los contenedores deben estar levantados):
 
 ```bash
 # EL Layer
-python scripts/load.py        # full refresh de dimensiones
-python scripts/extract.py     # extracción incremental de pagos
+python scripts/load.py
+python scripts/extract.py
 
-# dbt via Python API (funciona sin dbt en el PATH — recomendado en Windows)
-python -m dbt deps     --project-dir dbt --profiles-dir dbt
-python -m dbt snapshot --project-dir dbt --profiles-dir dbt
-python -m dbt run      --project-dir dbt --profiles-dir dbt
-python -m dbt test     --project-dir dbt --profiles-dir dbt
+# dbt — usar dbt_run.py (funciona sin dbt en el PATH, cualquier OS)
+python dbt_run.py deps
+python dbt_run.py snapshot
+python dbt_run.py run
+python dbt_run.py test
+
+# Modelo específico o full refresh
+python dbt_run.py run --select fact_payments
+python dbt_run.py run --full-refresh
 ```
 
 ### Orquestación con Airflow
