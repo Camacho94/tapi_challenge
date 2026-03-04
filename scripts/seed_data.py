@@ -46,17 +46,19 @@ CLIENTS = [
 ]
 
 # Comisiones por proveedor/biller: (provider, biller, commission)
+# Proveedores: procesadoras de pago LATAM (Prisma, Paganza, PlacetoPay, PayRetailers)
+# Billers: empresas de servicios que reciben los pagos (telefonía, cable, utilities)
 PROVIDER_BILLER_COMMISSIONS = [
-    ("PROV_MOVISTAR", "BILLER_MOVISTAR", 0.0500),
-    ("PROV_MOVISTAR", "BILLER_CLARO",    0.0480),
-    ("PROV_CLARO",    "BILLER_CLARO",    0.0520),
-    ("PROV_CLARO",    "BILLER_PERSONAL", 0.0450),
-    ("PROV_CLARO",    "BILLER_DIRECTV",  0.0400),
-    ("PROV_PERSONAL", "BILLER_PERSONAL", 0.0550),
-    ("PROV_PERSONAL", "BILLER_MOVISTAR", 0.0490),
-    ("PROV_TELECOM",  "BILLER_TELECOM",  0.0600),
-    ("PROV_TELECOM",  "BILLER_DIRECTV",  0.0420),
-    ("PROV_TELECOM",  "BILLER_CLARO",    0.0510),
+    ("PROV_PRISMA",       "BILLER_MOVISTAR", 0.0500),
+    ("PROV_PRISMA",       "BILLER_CLARO",    0.0480),
+    ("PROV_PAGANZA",      "BILLER_CLARO",    0.0520),
+    ("PROV_PAGANZA",      "BILLER_PERSONAL", 0.0450),
+    ("PROV_PAGANZA",      "BILLER_DIRECTV",  0.0400),
+    ("PROV_PLACETOPAY",   "BILLER_PERSONAL", 0.0550),
+    ("PROV_PLACETOPAY",   "BILLER_MOVISTAR", 0.0490),
+    ("PROV_PAYRETAILERS", "BILLER_TELECOM",  0.0600),
+    ("PROV_PAYRETAILERS", "BILLER_DIRECTV",  0.0420),
+    ("PROV_PAYRETAILERS", "BILLER_CLARO",    0.0510),
 ]
 
 STATUSES = ["confirmed", "confirmed", "confirmed", "confirmed", "pending", "rejected"]
