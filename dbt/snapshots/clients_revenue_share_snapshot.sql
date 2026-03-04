@@ -17,7 +17,7 @@
 
 select
     client_id,
-    revenue_share::numeric(5,4),
+    revenue_share::numeric(5,4)     as revenue_share,
     commission_type
 from {{ source('raw', 'stg_clients_revenue_share') }}
 where commission_type = 'revenue_share'

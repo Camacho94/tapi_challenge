@@ -18,7 +18,7 @@
 select
     external_provider_id    as provider_id,
     company_code            as biller_id,
-    tapi_commission::numeric(5,4),
+    tapi_commission::numeric(5,4)   as tapi_commission,
     commission_type
 from {{ source('raw', 'stg_providers_commission') }}
 where commission_type = 'amount'
