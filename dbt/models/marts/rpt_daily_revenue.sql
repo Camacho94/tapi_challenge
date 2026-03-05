@@ -18,32 +18,20 @@
 with fact as (
     select * from {{ ref('fact_payments') }}
 ),
-
 aggregated as (
     select
-        transaction_date                                        as report_date,
+        transaction_date as report_date,
         client_id,
         provider_id,
-
-        count(*)                                                as total_transactions,
-        count(*) filter (where status = 'confirmed')           as confirmed_transactions,
-
-        round(sum(amount), 2)                                   as total_amount,
-        round(sum(amount) filter (where status = 'confirmed'), 2)
-                                                                as confirmed_amount,
-
-        round(sum(tapi_gross_revenue), 4)                       as tapi_gross_revenue,
-        round(sum(client_payout), 4)                            as client_payout,
-        round(sum(tapi_net_revenue), 4)                         as tapi_net_revenue,
-
-        round(
-            count(*) filter (where status = 'confirmed')::numeric
-            / nullif(count(*), 0),
-            4
-        )                                                       as confirmation_rate
-
+        count(*) as total_transactions,
+        count(*) filter (where status = 'confirmed') as confirmed_transactions,
+        round(sum(amount), 2) as total_amount,
+        round(sum(amount) filter (where status = 'confirmed'), 2) as confirmed_amount,
+        round(sum(tapi_gross_revenue), 4) as tapi_gross_revenue,
+        round(sum(client_payout), 4) as client_payout,
+        round(sum(tapi_net_revenue), 4) as tapi_net_revenue,
+        round(count(*) filter (where status = 'confirmed')::numeric/ nullif(count(*), 0),4)as confirmation_rate
     from fact
     group by 1, 2, 3
 )
-
 select * from aggregated

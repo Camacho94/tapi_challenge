@@ -15,5 +15,5 @@ select
     client_id,
     revenue_share,
     commission_type,
-    dbt_valid_from      as valid_from
+    dbt_valid_from as valid_from
 from snapshot
