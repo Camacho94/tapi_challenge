@@ -43,7 +43,7 @@ OLTP_DSN = {
 
 DW_DSN = {
     "host":     os.getenv("DW_HOST",     "localhost"),
-    "port":     int(os.getenv("DW_PORT", 5432)),     # 5432 = puerto expuesto en docker-compose
+    "port":     int(os.getenv("DW_PORT", 5434)),     # 5434 = puerto expuesto en docker-compose (5432 ocupado por PG local)
     "dbname":   os.getenv("DW_DB",       "dw_db"),
     "user":     os.getenv("DW_USER",     "dw_user"),
     "password": os.getenv("DW_PASSWORD", "dw_pass"),

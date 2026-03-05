@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 # ── Configuración ─────────────────────────────────────────────────────────────
 
 OLTP_DSN = dict(host="localhost", port=5433, dbname="oltp_db", user="oltp_user", password="oltp_pass")
-DW_DSN   = dict(host="localhost", port=5432, dbname="dw_db",   user="dw_user",   password="dw_pass")
+DW_DSN   = dict(host="localhost", port=5434, dbname="dw_db",   user="dw_user",   password="dw_pass")
 
 DBT_DIR = "dbt"
 
@@ -66,15 +66,12 @@ def run_python(script: str) -> None:
 
 
 def run_dbt(*args) -> None:
-    """Ejecuta un comando dbt via la API de Python (sin depender del PATH)."""
-    from dbt.cli.main import dbtRunner
-    cmd = list(args) + ["--project-dir", DBT_DIR, "--profiles-dir", DBT_DIR]
+    """Ejecuta un comando dbt via dbt_run.py (maneja os._exit de dbt 1.11)."""
     log.info("dbt %s", " ".join(args))
-    r = dbtRunner()
-    res = r.invoke(cmd)
-    if not res.success:
+    result = subprocess.run([sys.executable, "dbt_run.py"] + list(args), check=False)
+    if result.returncode != 0:
         log.error("dbt %s fallo.", args[0])
-        sys.exit(1)
+        sys.exit(result.returncode)
 
 
 # ── Pipeline ──────────────────────────────────────────────────────────────────
@@ -91,7 +88,7 @@ def main():
 
     # 2. Esperar a que las DBs estén listas
     wait_for_postgres(OLTP_DSN, "OLTP (puerto 5433)")
-    wait_for_postgres(DW_DSN,   "DW   (puerto 5432)")
+    wait_for_postgres(DW_DSN,   "DW   (puerto 5434)")
 
     # 3. Cargar dimensiones al DW
     run_python("scripts/load.py")
@@ -105,7 +102,7 @@ def main():
     run_dbt("run")
 
     log.info("Pipeline completado. Datos disponibles en marts.fact_payments y marts.rpt_daily_revenue")
-    log.info("Conexion DW: host=localhost port=5432 dbname=dw_db user=dw_user password=dw_pass")
+    log.info("Conexion DW: host=localhost port=5434 dbname=dw_db user=dw_user password=dw_pass")
 
 
 if __name__ == "__main__":

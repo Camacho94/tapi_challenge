@@ -4,7 +4,7 @@ tapi:
     dev:
       type: postgres
       host:     "{{ env_var('DW_HOST',     'localhost') }}"
-      port:     "{{ env_var('DW_PORT',     '5432') | int }}"
+      port:     "{{ env_var('DW_PORT',     '5434') | int }}"
       user:     "{{ env_var('DW_USER',     'dw_user') }}"
       password: "{{ env_var('DW_PASSWORD', 'dw_pass') }}"
       dbname:   "{{ env_var('DW_DB',       'dw_db') }}"

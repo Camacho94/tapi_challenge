@@ -19,7 +19,7 @@ with source as (
 
     {% if is_incremental() %}
     -- Solo trae filas más recientes que el máximo loaded_at ya cargado
-    where loaded_at > (select max(loaded_at) from {{ this }})
+    where loaded_at > (select coalesce(max(loaded_at), '1970-01-01') from {{ this }})
     {% endif %}
 )
 

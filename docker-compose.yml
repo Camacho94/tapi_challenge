@@ -60,7 +60,7 @@ services:
       POSTGRES_USER: dw_user
       POSTGRES_PASSWORD: dw_pass
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - dw_data:/var/lib/postgresql/data
       - ./sql/dw_init.sql:/docker-entrypoint-initdb.d/init.sql
